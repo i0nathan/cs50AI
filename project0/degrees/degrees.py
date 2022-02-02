@@ -114,6 +114,14 @@ def test2(source, target, explored=[]):
     return None
 
 
+def expand(frontier):
+    if frontier.empty(): return None
+    if frontier.contains_state(target): return explored
+    explored.append(frontier.remove())
+
+    frontier.add(Node(state=n[1], parent=source, action=neighbors_for_person(n[1])))
+
+
 def shortest_path(source, target):
     """
     Returns the shortest list of (movie_id, person_id) pairs
@@ -130,15 +138,35 @@ def shortest_path(source, target):
 
     # Initialize explored list
     explored = []
-    lists = []
+
+    # Node:
+    #     state = movie, id
+    #     parent = node that generated this node
+    #     action = action applied to parent node to get to this state
+
+    # TODO: Found solution but returned array is wrongly indexed
+    # 2 degrees of separation.
+    # Traceback (most recent call last):
+    #   File "C:\Users\HPPAVILION\workspace\cs50AI\project0\degrees\degrees.py", line 231, in <module>
+    #     main()
+    #   File "C:\Users\HPPAVILION\workspace\cs50AI\project0\degrees\degrees.py", line 82, in main
+    #     person2 = people[path[i + 1][1]]["name"]
+    # KeyError: '0'
 
     frontier = StackFrontier()
-    for n in neighbors_for_person(source):
-        # Add a node per neighbor
-        frontier.add(Node(n[1]==target, parent=source, neighbors_for_person(n[1])))
+
+    # Add initial node
+    frontier.add(Node(source, None, None))
 
     while not frontier.empty():
-        # TODO: Look into the nodes actions
+        if frontier.contains_state(target): return explored
+        node = frontier.remove()
+        explored.append(node.state)
+        for a in neighbors_for_person(node.state):
+            if a not in explored:
+                frontier.add(Node(a[1], node.state, a[0]))
+
+    return None
 
     ############################################################################
     # Return trivial case
