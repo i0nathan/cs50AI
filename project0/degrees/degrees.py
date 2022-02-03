@@ -144,15 +144,8 @@ def shortest_path(source, target):
     #     parent = node that generated this node
     #     action = action applied to parent node to get to this state
 
-    # TODO: Found solution but returned array is wrongly indexed
-    # 2 degrees of separation.
-    # Traceback (most recent call last):
-    #   File "C:\Users\HPPAVILION\workspace\cs50AI\project0\degrees\degrees.py", line 231, in <module>
-    #     main()
-    #   File "C:\Users\HPPAVILION\workspace\cs50AI\project0\degrees\degrees.py", line 82, in main
-    #     person2 = people[path[i + 1][1]]["name"]
-    # KeyError: '0'
-
+    # TODO: Last node is not needed, returning too many nodes
+    
     frontier = StackFrontier()
 
     # Add initial node
@@ -161,9 +154,9 @@ def shortest_path(source, target):
     while not frontier.empty():
         if frontier.contains_state(target): return explored
         node = frontier.remove()
-        explored.append(node.state)
         for a in neighbors_for_person(node.state):
             if a not in explored:
+                explored.append(a)
                 frontier.add(Node(a[1], node.state, a[0]))
 
     return None
