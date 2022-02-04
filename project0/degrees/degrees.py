@@ -136,27 +136,50 @@ def shortest_path(source, target):
     # Apolo 13 (Kevin Bacon [102], Tom Hnaks [158]) > Forest Gump (Tom Hanks [158], Robin Wright [705])
     # [(112384, 158), (109830, 705)]
 
-    # Initialize explored list
-    explored = []
-
     # Node:
     #     state = movie, id
     #     parent = node that generated this node
     #     action = action applied to parent node to get to this state
 
     # TODO: Last node is not needed, returning too many nodes
-    
+
+    # Initialize explored list
+    explored = []
+
+    # Identify movies of target
+    target_movies = people[target]["movies"]
+
     frontier = StackFrontier()
 
     # Add initial node
     frontier.add(Node(source, None, None))
 
     while not frontier.empty():
-        if frontier.contains_state(target): return explored
-        node = frontier.remove()
+        # if frontier.contains_state(target): return explored
+
+        # Allow to look for specific params in frontier
+        heu = len(frontier.frontier) - 1
+
+        # Remove node that has movie same as target movies
+        for i, n in enumerate(frontier.frontier):
+            if n.state == target:
+                explored.append((n.action, n.state))
+                return explored
+            # if node neighbor has a movie from those in target, search that first
+            # if n.action in target_movies and not any(x[1] == n.state for x in explored):
+            if n.action in target_movies:
+                heu = i
+                # node = frontier.frontier.pop(i)
+                # break
+        node = frontier.frontier.pop(heu)
+        # node = frontier.remove()
+
+        # Add explored nodes except first node
+        if node.action != None:
+            explored.append((node.action, node.state))
+
         for a in neighbors_for_person(node.state):
-            if a not in explored:
-                explored.append(a)
+            if (a not in explored) and ((a[0], a[1]) not in frontier.frontier) and (a[1] != node.state):
                 frontier.add(Node(a[1], node.state, a[0]))
 
     return None
