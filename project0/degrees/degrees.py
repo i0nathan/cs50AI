@@ -141,7 +141,7 @@ def shortest_path(source, target):
     #     parent = node that generated this node
     #     action = action applied to parent node to get to this state
 
-    # TODO: Last node is not needed, returning too many nodes
+    # TODO: Implement cost function
 
     # Initialize explored list
     explored = []
@@ -167,8 +167,11 @@ def shortest_path(source, target):
                 return explored
             # if node neighbor has a movie from those in target, search that first
             # if n.action in target_movies and not any(x[1] == n.state for x in explored):
-            if n.action in target_movies:
-                heu = i
+            try:
+                if n.action != explored[-1][0]: heu = i  # if the movie is different from previous one
+            except IndexError:
+                pass
+            if n.action in target_movies: heu = i  # If the movie is one of the targets
                 # node = frontier.frontier.pop(i)
                 # break
         node = frontier.frontier.pop(heu)
@@ -179,7 +182,7 @@ def shortest_path(source, target):
             explored.append((node.action, node.state))
 
         for a in neighbors_for_person(node.state):
-            if (a not in explored) and ((a[0], a[1]) not in frontier.frontier) and (a[1] != node.state):
+            if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)):
                 frontier.add(Node(a[1], node.state, a[0]))
 
     return None
