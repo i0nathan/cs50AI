@@ -84,42 +84,8 @@ def main():
             print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
 
-def test(source, target, explored=[]):
-
-    for x in neighbors_for_person(source):
-        if target == x[1]:
-            explored.append(x)
-            return explored
-        # Add to frontier
-        elif x not in explored and x[1] != source:
-            explored.append(x)
-
-    for e in explored:
-        return test(e[1], target, explored[1:])
-
-    return None
-
-
-def test2(source, target, explored=[]):
-
-    for x in neighbors_for_person(source):
-        if target == x[1]:
-            explored.append(x)
-            return explored
-        # Add to frontier
-        elif x not in explored and x[1] != source:
-            explored.append(x)
-            return test2(x[1], target, explored)
-
-    return None
-
-
-def expand(frontier):
-    if frontier.empty(): return None
-    if frontier.contains_state(target): return explored
-    explored.append(frontier.remove())
-
-    frontier.add(Node(state=n[1], parent=source, action=neighbors_for_person(n[1])))
+def rec_search():
+    pass
 
 
 def shortest_path(source, target):
@@ -130,7 +96,6 @@ def shortest_path(source, target):
     If no possible path, returns None.
     """
 
-    # TODO
     # source: Kevin Bacon > target: Robin Wright
     # For movie in people['movies'] if source in movies[m]['stars'] return steps, else steps++
     # Apolo 13 (Kevin Bacon [102], Tom Hnaks [158]) > Forest Gump (Tom Hanks [158], Robin Wright [705])
@@ -186,33 +151,6 @@ def shortest_path(source, target):
                 frontier.add(Node(a[1], node.state, a[0]))
 
     return None
-
-    ############################################################################
-    # Return trivial case
-    if source == target: return explored
-
-    # Look in all the neighbors
-    for x in neighbors_for_person(source):
-        if target == x[1]:
-            explored.append(x)
-            return explored
-        # Add to frontier
-        elif x not in explored and x[1] != source:
-            explored.append(x)
-
-    # Evaluate the cost of each neighbor to select shortest path
-    for e in explored:
-        lists.append(test2(e[1], target))
-
-    shortest = float('inf')
-    for i, l in enumerate(lists):
-        if l == None: continue
-        print(f"List {i} has {len(l)} elements")
-        if len(l) < shortest:
-            shortest = i
-
-    print('\n' * 5)
-    return lists[shortest]
 
 
 def person_id_for_name(name):
