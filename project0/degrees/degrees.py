@@ -84,8 +84,105 @@ def main():
             print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
 
-def rec_search():
-    pass
+def rec_search(target, frontier, lcost=float('inf'), ccost=0, explored=[]):
+    # rec_search(frontier.remove(), target=target, lcost=len(explored), frontier=frontier)
+    # if source.state == target:
+    #     explored.append((source.action, source.state))
+    #     return explored
+
+    # If cannot be lower cost return None
+    if not ccost < lcost: return None
+
+    if frontier.empty(): return None
+
+    target_movies = people[target]["movies"]
+
+    # for a in neighbors_for_person(source.state):
+    #     if (a not in explored) and (a[1] != source.state) and (~any(x[1]==a[1] for x in explored)):
+    #         frontier.add(Node(a[1], source.state, a[0]))
+
+    # Allow to look for specific params in frontier
+    heu = len(frontier.frontier) - 1
+
+    # Remove node that has movie same as target movies
+    for i, n in enumerate(frontier.frontier):
+        if n.state == target:
+            explored.append((n.action, n.state))
+            return explored
+        # if node neighbor has a movie from those in target, search that first
+        # if n.action in target_movies and not any(x[1] == n.state for x in explored):
+        try:
+            if n.action != explored[-1][0]: heu = i  # if the movie is different from previous one
+        except IndexError:
+            pass
+        if n.action in target_movies: heu = i  # If the movie is one of the targets
+            # node = frontier.frontier.pop(i)
+            # break
+    node = frontier.frontier.pop(heu)
+    # node = frontier.remove()
+
+    # Add explored nodes except first node
+    if node.action != None:
+        explored.append((node.action, node.state))
+
+    for a in neighbors_for_person(node.state):
+        if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)):
+            frontier.add(Node(a[1], node.state, a[0]))
+
+    ccost += 1
+    return rec_search(target=target, frontier=frontier, lcost=lcost, ccost=ccost, explored=explored)
+
+
+def cost_rec(target, node, lcost=float('inf'), ccost=0, explored=[]):
+    # rec_search(frontier.remove(), target=target, lcost=len(explored), frontier=frontier)
+    # if source.state == target:
+    #     explored.append((source.action, source.state))
+    #     return explored
+
+    if ccost == 0:
+        frontier = StackFrontier()
+        frontier.add(node)
+    # If cannot be lower cost return None
+    if not ccost < lcost: return None
+
+    if frontier.empty(): return None
+
+    target_movies = people[target]["movies"]
+
+    # for a in neighbors_for_person(source.state):
+    #     if (a not in explored) and (a[1] != source.state) and (~any(x[1]==a[1] for x in explored)):
+    #         frontier.add(Node(a[1], source.state, a[0]))
+
+    # Allow to look for specific params in frontier
+    heu = len(frontier.frontier) - 1
+
+    # Remove node that has movie same as target movies
+    for i, n in enumerate(frontier.frontier):
+        if n.state == target:
+            explored.append((n.action, n.state))
+            return explored
+        # if node neighbor has a movie from those in target, search that first
+        # if n.action in target_movies and not any(x[1] == n.state for x in explored):
+        try:
+            if n.action != explored[-1][0]: heu = i  # if the movie is different from previous one
+        except IndexError:
+            pass
+        if n.action in target_movies: heu = i  # If the movie is one of the targets
+            # node = frontier.frontier.pop(i)
+            # break
+    node = frontier.frontier.pop(heu)
+    # node = frontier.remove()
+
+    # Add explored nodes except first node
+    if node.action != None:
+        explored.append((node.action, node.state))
+
+    for a in neighbors_for_person(node.state):
+        if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)):
+            frontier.add(Node(a[1], node.state, a[0]))
+
+    ccost += 1
+    return rec_search(target=target, frontier=frontier, lcost=lcost, ccost=ccost, explored=explored)
 
 
 def shortest_path(source, target):
@@ -110,47 +207,80 @@ def shortest_path(source, target):
 
     # Initialize explored list
     explored = []
+    buff = []
+    costs_dict = {}
 
     # Identify movies of target
-    target_movies = people[target]["movies"]
+    # target_movies = people[target]["movies"]
 
     frontier = StackFrontier()
 
     # Add initial node
-    frontier.add(Node(source, None, None))
+    # frontier.add(Node(source, None, None))
 
+    ############################################################################
+    for a in neighbors_for_person(source):
+    # for a in neighbors_for_person(node.state):
+        if (a not in explored) and (a[1] != source) and (~any(x[1]==a[1] for x in explored)):
+            frontier.add(Node(a[1], source, a[0]))
+            # # IDEA: run rec_search for each frontier generated here: pass node as frontier or copy/
+            cur_search = cost_rec(target=target, node=Node(a[1], source, a[0]))
+            if cur_search != None:
+                print(f'length for {a[1]}: {len(cur_search)}')
+                costs_dict[a[1]] = (len(cur_search), cur_search)
+
+    print(costs_dict)
+    frontiercpy = frontier
+    explored = rec_search(target=target, frontier=frontiercpy)
+    if explored == None: return None
     while not frontier.empty():
-        # if frontier.contains_state(target): return explored
+        frontier.remove()
+        frontiercpy = frontier
+        buff = rec_search(target=target, frontier=frontiercpy, lcost=len(explored))
+        try:
+            print(f'Length of explored {len(explored)}; Length of buff {len(buff)}')
+            # explored = explored if len(explored) < len(buff) else buff
+            if len(buff) < len(explored):
+                explored = []
+                explored = buff.copy()
+        except TypeError:
+            pass
 
-        # Allow to look for specific params in frontier
-        heu = len(frontier.frontier) - 1
+    return explored
 
-        # Remove node that has movie same as target movies
-        for i, n in enumerate(frontier.frontier):
-            if n.state == target:
-                explored.append((n.action, n.state))
-                return explored
-            # if node neighbor has a movie from those in target, search that first
-            # if n.action in target_movies and not any(x[1] == n.state for x in explored):
-            try:
-                if n.action != explored[-1][0]: heu = i  # if the movie is different from previous one
-            except IndexError:
-                pass
-            if n.action in target_movies: heu = i  # If the movie is one of the targets
-                # node = frontier.frontier.pop(i)
-                # break
-        node = frontier.frontier.pop(heu)
-        # node = frontier.remove()
-
-        # Add explored nodes except first node
-        if node.action != None:
-            explored.append((node.action, node.state))
-
-        for a in neighbors_for_person(node.state):
-            if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)):
-                frontier.add(Node(a[1], node.state, a[0]))
-
-    return None
+    ############################################################################
+    # while not frontier.empty():
+    #     # if frontier.contains_state(target): return explored
+    #
+    #     # Allow to look for specific params in frontier
+    #     heu = len(frontier.frontier) - 1
+    #
+    #     # Remove node that has movie same as target movies
+    #     for i, n in enumerate(frontier.frontier):
+    #         if n.state == target:
+    #             explored.append((n.action, n.state))
+    #             return explored
+    #         # if node neighbor has a movie from those in target, search that first
+    #         # if n.action in target_movies and not any(x[1] == n.state for x in explored):
+    #         try:
+    #             if n.action != explored[-1][0]: heu = i  # if the movie is different from previous one
+    #         except IndexError:
+    #             pass
+    #         if n.action in target_movies: heu = i  # If the movie is one of the targets
+    #             # node = frontier.frontier.pop(i)
+    #             # break
+    #     node = frontier.frontier.pop(heu)
+    #     # node = frontier.remove()
+    #
+    #     # Add explored nodes except first node
+    #     if node.action != None:
+    #         explored.append((node.action, node.state))
+    #
+    #     for a in neighbors_for_person(node.state):
+    #         if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)):
+    #             frontier.add(Node(a[1], node.state, a[0]))
+    #
+    # return None
 
 
 def person_id_for_name(name):

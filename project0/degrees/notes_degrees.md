@@ -13,7 +13,7 @@ Repeat:
 [ Cost function ]	
 We need to iterate over the initial expanded node and calculate each of the possibilities costs
 Update the lowest cost as a break point -> if find the solution or break point > lowest cost
-Pass the updated frontier, selected node (from heuristic func), lowest cost, current cost, 
+Pass the updated frontier, selected node (from heuristic func), lowest cost, current cost, target, explored array
 
 [ tried functions ]
 This function returned too many and repeated nodes?
