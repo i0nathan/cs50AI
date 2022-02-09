@@ -84,63 +84,32 @@ def main():
             print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
 
-def rec_search(target, frontier, lcost=float('inf'), ccost=0, explored=[]):
-    # rec_search(frontier.remove(), target=target, lcost=len(explored), frontier=frontier)
-    # if source.state == target:
-    #     explored.append((source.action, source.state))
-    #     return explored
-
-    # If cannot be lower cost return None
-    if not ccost < lcost: return None
-
+def recursive_search(node, frontier, explored):
+    node = frontier.remove()
+    if node.state == target: return [(node.action, node.state)]
     if frontier.empty(): return None
 
-    target_movies = people[target]["movies"]
-
-    # for a in neighbors_for_person(source.state):
-    #     if (a not in explored) and (a[1] != source.state) and (~any(x[1]==a[1] for x in explored)):
-    #         frontier.add(Node(a[1], source.state, a[0]))
-
-    # Allow to look for specific params in frontier
-    heu = len(frontier.frontier) - 1
-
-    # Remove node that has movie same as target movies
-    for i, n in enumerate(frontier.frontier):
-        if n.state == target:
-            explored.append((n.action, n.state))
-            return explored
-        # if node neighbor has a movie from those in target, search that first
-        # if n.action in target_movies and not any(x[1] == n.state for x in explored):
-        try:
-            if n.action != explored[-1][0]: heu = i  # if the movie is different from previous one
-        except IndexError:
-            pass
-        if n.action in target_movies: heu = i  # If the movie is one of the targets
-            # node = frontier.frontier.pop(i)
-            # break
-    node = frontier.frontier.pop(heu)
-    # node = frontier.remove()
-
-    # Add explored nodes except first node
-    if node.action != None:
-        explored.append((node.action, node.state))
+    shortest_path = None
 
     for a in neighbors_for_person(node.state):
-        if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)):
+        if a not in frontier.frontier and a not in explored:
             frontier.add(Node(a[1], node.state, a[0]))
+        finder = recursive_search(node, frontier, explored)
+        if finder != None:
+            path = finder.append(a)
+            if shortest_path == None or len(path) < len(shortest_path):
+                shortest_path = path
 
-    ccost += 1
-    return rec_search(target=target, frontier=frontier, lcost=lcost, ccost=ccost, explored=explored)
+    return shortest_path
 
-
-def cost_rec(target, node, lcost=float('inf'), ccost=0, explored=[]):
+def cost_rec(target, node, frontier=StackFrontier(), lcost=float('inf'), ccost=0, explored=[]):
     # rec_search(frontier.remove(), target=target, lcost=len(explored), frontier=frontier)
     # if source.state == target:
     #     explored.append((source.action, source.state))
     #     return explored
 
     if ccost == 0:
-        frontier = StackFrontier()
+        # frontier = StackFrontier()
         frontier.add(node)
     # If cannot be lower cost return None
     if not ccost < lcost: return None
@@ -149,9 +118,9 @@ def cost_rec(target, node, lcost=float('inf'), ccost=0, explored=[]):
 
     target_movies = people[target]["movies"]
 
-    # for a in neighbors_for_person(source.state):
-    #     if (a not in explored) and (a[1] != source.state) and (~any(x[1]==a[1] for x in explored)):
-    #         frontier.add(Node(a[1], source.state, a[0]))
+    for a in neighbors_for_person(node.state):
+        if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)) and (a not in frontier.frontier):
+            frontier.add(Node(a[1], node.state, a[0]))
 
     # Allow to look for specific params in frontier
     heu = len(frontier.frontier) - 1
@@ -177,12 +146,8 @@ def cost_rec(target, node, lcost=float('inf'), ccost=0, explored=[]):
     if node.action != None:
         explored.append((node.action, node.state))
 
-    for a in neighbors_for_person(node.state):
-        if (a not in explored) and (a[1] != node.state) and (~any(x[1]==a[1] for x in explored)):
-            frontier.add(Node(a[1], node.state, a[0]))
-
     ccost += 1
-    return rec_search(target=target, frontier=frontier, lcost=lcost, ccost=ccost, explored=explored)
+    return cost_rec(target=target, node=node, frontier=frontier, lcost=lcost, ccost=ccost, explored=explored)
 
 
 def shortest_path(source, target):
@@ -209,6 +174,7 @@ def shortest_path(source, target):
     explored = []
     buff = []
     costs_dict = {}
+    cur_val = 0
 
     # Identify movies of target
     # target_movies = people[target]["movies"]
@@ -224,12 +190,26 @@ def shortest_path(source, target):
         if (a not in explored) and (a[1] != source) and (~any(x[1]==a[1] for x in explored)):
             frontier.add(Node(a[1], source, a[0]))
             # # IDEA: run rec_search for each frontier generated here: pass node as frontier or copy/
-            cur_search = cost_rec(target=target, node=Node(a[1], source, a[0]))
-            if cur_search != None:
-                print(f'length for {a[1]}: {len(cur_search)}')
-                costs_dict[a[1]] = (len(cur_search), cur_search)
+            # cur_search = cost_rec(target=target, node=Node(a[1], source, a[0]))
+            # if cur_search != None:
+            #     print(f'length for {a[1]}: {len(cur_search)}')
+            #     costs_dict[a[1]] = (len(cur_search), cur_search)
 
-    print(costs_dict)
+    # Calculate cost of each node
+    for i in range(len(frontier.frontier)):
+        # Evaluate the cost of each node
+        buff = cost_rec(target, frontier.frontier[i])
+
+        if buff != None:
+            # Initialize explored for the first time
+            if len(explored) == 0:
+                explored = buff.copy()
+            elif len(buff) < len(explored):
+                explored = buff.copy()
+
+    return explored
+
+    # print(costs_dict)
     frontiercpy = frontier
     explored = rec_search(target=target, frontier=frontiercpy)
     if explored == None: return None
