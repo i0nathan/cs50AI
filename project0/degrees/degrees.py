@@ -84,20 +84,30 @@ def main():
             print(f"{i + 1}: {person1} and {person2} starred in {movie}")
 
 
-def recursive_search(node, frontier, explored):
-    node = frontier.remove()
-    if node.state == target: return [(node.action, node.state)]
+def recursive_search(target, frontier, explored):
+    # We can ignore the frontier and nodes utils and use simple arrays
+    # Return the explored array when found
     if frontier.empty(): return None
 
+    node = frontier.remove()
+    if node.action != None: explored.append((node.action, node.state))
+    if node.state == target: return []
+
     shortest_path = None
+    finder = None
+    # path = []
 
     for a in neighbors_for_person(node.state):
-        if a not in frontier.frontier and a not in explored:
+        if a not in frontier.frontier and a not in explored:  # can find (movie, star) in frontier.frontier?
             frontier.add(Node(a[1], node.state, a[0]))
-        finder = recursive_search(node, frontier, explored)
+        try:
+            finder = recursive_search(target, frontier, explored)
+        except TypeError:
+            pass
         if finder != None:
-            path = finder.append(a)
-            if shortest_path == None or len(path) < len(shortest_path):
+            path = finder + [a]
+            # finder.append(a)
+            if shortest_path == None or len(finder) < len(shortest_path):
                 shortest_path = path
 
     return shortest_path
@@ -182,7 +192,11 @@ def shortest_path(source, target):
     frontier = StackFrontier()
 
     # Add initial node
-    # frontier.add(Node(source, None, None))
+    frontier.add(Node(source, None, None))
+
+    path = recursive_search(target, frontier, explored)
+
+    return path
 
     ############################################################################
     for a in neighbors_for_person(source):
